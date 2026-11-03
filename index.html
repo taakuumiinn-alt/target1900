@@ -47,6 +47,26 @@ input[type=number]{font:inherit;width:96px;padding:9px 10px;border-radius:10px;b
 .wc .ans{margin-top:18px;font-size:22px;color:var(--ac)}.wc .sub{margin-top:10px;font-size:16px;line-height:1.6;white-space:pre-line;color:var(--nr)}
 .hint{color:var(--mu);font-size:14px}.wc{touch-action:none}
 html,body{overscroll-behavior:none;-webkit-tap-highlight-color:transparent}button{touch-action:manipulation}
+.tools{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.tools button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 2px;font-size:11px;min-height:48px;color:var(--mu)}
+.tools button span{font-size:16px;line-height:1;color:var(--tx);display:flex}
+.tools button.on{border-color:var(--ac);color:var(--ac);background:color-mix(in srgb,var(--ac) 12%,transparent)}.tools button.on span{color:var(--ac)}
+.tools button:disabled,.judge button:disabled{opacity:.35;cursor:default}
+html.st{height:100dvh;overflow:hidden}
+html.st body{height:100%;display:flex;flex-direction:column;overflow:hidden}
+html.st header{padding:8px 16px}
+html.st main{flex:1;min-height:0;display:flex;flex-direction:column;padding-bottom:64px;width:100%}
+html.st .stage{flex:1;min-height:0;padding:0;gap:clamp(8px,1.6vh,16px);width:100%}
+html.st .pg,html.st .ctl{width:100%;max-width:560px}
+html.st .wc{flex:1;min-height:0;width:100%;max-width:560px;padding:clamp(14px,3vh,28px)}
+html.st .wc .big{font-size:calc(var(--fs,1)*clamp(28px,6.5vh,56px))}
+html.st .wc .big.ja{font-size:calc(var(--fs,1)*clamp(22px,4.6vh,40px))}
+html.st .wc .ans{font-size:calc(var(--fs,1)*clamp(18px,3.4vh,28px));margin-top:clamp(8px,2vh,18px)}
+html.st .wc .sub{font-size:calc(var(--fs,1)*clamp(14px,2.4vh,18px));margin-top:clamp(6px,1.4vh,10px)}
+html.st .ctl{display:flex;flex-direction:column;gap:clamp(6px,1.2vh,10px)}
+html.st .judge{max-width:none}html.st .judge button{padding:clamp(10px,2.2vh,16px) 4px;min-height:48px}
+@media(min-width:900px){html.st main{padding-bottom:0}}
+@media(max-height:500px) and (orientation:landscape){html.st header{display:none}html.st #nav button{padding:6px 4px}html.st main{padding-bottom:46px}html.st .stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr);column-gap:14px}html.st .pg{grid-column:1;max-width:none}html.st .wc{grid-column:1;grid-row:2;max-width:none}html.st .ctl{grid-column:2;grid-row:1/3;align-self:center;max-width:none}}
 main{padding-bottom:84px}.chip{padding:9px 12px}
 #nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--sf);border-top:1px solid var(--bd);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));z-index:5}
 #nav button{flex:1;border:0;background:none;border-radius:10px;padding:10px 4px;font-size:13px;color:var(--mu)}
@@ -62,8 +82,8 @@ main{padding-bottom:84px}.chip{padding:9px 12px}
 </style>
 </head>
 <body>
-<header><b id="logo" style="cursor:pointer">Target 1900</b><button id="theme" aria-label="テーマ切替">◐</button></header>
-<nav id="nav"><button data-t="home">ホーム</button><button data-t="test">テスト</button><button data-t="rv">復習</button><button data-t="wd">単語</button></nav>
+<header><b id="logo" style="cursor:pointer">Target 1900</b><span><button id="cloud" aria-label="同期とバックアップ">☁</button> <button id="theme" aria-label="テーマ切替">◐</button></span></header>
+<nav id="nav"><button data-t="home">ホーム</button><button data-t="test">テスト</button><button data-t="rv">復習</button><button data-t="wd">単語</button><button data-t="rd">音声</button></nav>
 <main id="app"></main>
 <script>
 (function(){
@@ -80,7 +100,7 @@ function inRange(s,e){return WORDS.filter(function(w){return w.no>=s&&w.no<=e})}
 function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t}return a}
 function streak(){var n=0,d=new Date();while(true){var k=d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();if(daily[k]&&daily[k].n>0){n++;d.setDate(d.getDate()-1)}else if(n===0&&k===today()){d.setDate(d.getDate()-1)}else break}return n}
 function mastered(p){return !!(p&&p.box>=4&&p.hist&&p.hist.slice(-2).join()==="ok,ok")}
-function newSess(ids,dir){return{ids:ids,idx:0,dir:dir,res:[],saved:ids.filter(function(n){return prog[n]&&prog[n].saved})}}
+function newSess(ids,dir){return{sid:Date.now()+Math.random(),ids:ids,idx:0,dir:dir,res:[],saved:ids.filter(function(n){return prog[n]&&prog[n].saved})}}
 function stats(){var ok=0,miss=0,near=0,sv=0,seen=0,due=0,now=Date.now();Object.keys(prog).forEach(function(k){var p=prog[k];if(p.saved)sv++;if(!p.last||!byNo(+k))return;seen++;if(mastered(p))ok++;else if(p.last==="ng")miss++;else near++;if(p.due==null||p.due<=now)due++});var t=daily[today()]||{n:0,ok:0};return{ok:ok,miss:miss,near:near,sv:sv,seen:seen,due:due,tn:t.n,tr:t.n?Math.round(t.ok/t.n*100):0}}
 
 function home(){tab("home");
@@ -119,16 +139,16 @@ function setup(){tab("test");
   draw();
 }
 
-function study(){tab("test");
+function study(){tab("test",1);
   if(!sess)return home();
   if(sess.idx>=sess.ids.length)return result();
-  var w=byNo(sess.ids[sess.idx]),en=sess.dir==="en",sv=sess.saved.indexOf(w.no)>=0;
+  document.documentElement.classList.add("st");var w=byNo(sess.ids[sess.idx]),en=sess.dir==="en",sv=sess.saved.indexOf(w.no)>=0,vis=en||flipped,jv=!en||flipped;
   app.innerHTML='<div class="stage"><div class="pg"><div class="bar"><i style="width:'+(sess.idx/sess.ids.length*100)+'%;background:var(--ac)"></i></div><p class="note" style="margin:6px 0 0;text-align:right">'+(sess.idx+1)+' / '+sess.ids.length+'</p></div>'
   +'<div class="card wc" id="card"><span class="no">No.'+w.no+'</span><span class="st">'+(sv?'★':'')+'</span><div class="big'+(en?'':' ja')+'">'+esc(en?w.word:w.meaning)+'</div>'
   +(flipped?'<div class="ans">'+esc(en?w.meaning:w.word)+'</div>'+(w.note?'<div class="sub">'+esc(w.note)+'</div>':''):'<div class="hint" style="margin-top:22px">タップして答えを見る</div>')+'</div>'
-  +(flipped?'<div class="judge"><button class="j-ng" data-j="ng">✕ 間違えた</button><button class="j-nr" data-j="nr">△ 惜しい</button><button class="j-ok" data-j="ok">○ 正解</button></div>':'')
-  +'<div class="row"><button id="undo"'+(sess.idx?'':' disabled')+'>↶ 1つ戻る</button><button id="sv">'+(sv?'★ 保存済み':'☆ 保存')+'</button><button id="quit">中断して戻る</button></div>'
-  +'<p class="note">答えを開いたあと、左=間違い・上=惜しい・右=正解・下=保存。PCはドラッグか矢印キー(スペースで答え表示)でも操作できます。</p></div>';
+  +'<div class="ctl"><div class="judge">'+[["ng","j-ng","✕ 間違えた"],["nr","j-nr","△ 惜しい"],["ok","j-ok","○ 正解"]].map(function(a){return'<button class="'+a[1]+'" data-j="'+a[0]+'"'+(flipped?'':' disabled')+'>'+a[2]+'</button>'}).join("")+'</div>'
+  +'<div class="tools"><button id="undo"'+(sess.idx?'':' disabled')+'><span>↶</span>戻る</button><button id="sv" class="'+(sv?'on':'')+'"><span>'+(sv?'★':'☆')+'</span>保存</button><button id="snd" class="'+(snd?'on':'')+'" aria-pressed="'+snd+'" aria-label="音声の自動再生 '+(snd?'ON':'OFF')+'"><span>'+(snd?ICON_ON:ICON_OFF)+'</span>自動'+(snd?'ON':'OFF')+'</button><button id="pe"'+(vis&&Speech.ok?'':' disabled')+'><span>▶</span>英語</button><button id="pj"'+(jv&&Speech.ok?'':' disabled')+'><span>▶</span>日本語</button><button id="quit"><span>✕</span>中断</button></div></div>'
+  +'</div>';
   act={flip:function(){flipped=!flipped;study()}};
   (function(){var c=$("#card"),x=0,y=0,sx=0,sy=0,drag=false,moved=false;
   var DIR={l:["ng","✕ 間違い","var(--ng)"],r:["ok","○ 正解","var(--ok)"],u:["nr","△ 惜しい","var(--nr)"],d:["sv","★ 保存","var(--sv)"]};
@@ -153,16 +173,22 @@ function study(){tab("test");
   $("#undo").onclick=function(){if(!sess.idx)return;sess.res.pop();sess.idx--;flipped=false;save("t19sess",sess);study()};
   $("#sv").onclick=function(){var i=sess.saved.indexOf(w.no);if(i>=0)sess.saved.splice(i,1);else sess.saved.push(w.no);save("t19sess",sess);study()};
   $("#quit").onclick=home;
+var key=(sess.sid||"")+"|"+sess.idx+"|"+(vis?1:0);
+$("#snd").onclick=function(){snd=!snd;save("t19snd",snd);if(snd){if(vis){lastKey=key;Speech.say(w.word,"en-US",{rate:.95,key:"en:"+p4(w.no)})}}else Speech.stop();study()};
+$("#pe").onclick=function(){Speech.say(w.word,"en-US",{rate:.9,key:"en:"+p4(w.no)})};
+$("#pj").onclick=function(){Speech.say(w.meaning,"ja-JP",{rate:1,key:"ja:"+p4(w.no)})};
+if(vis){if(snd&&key!==lastKey){lastKey=key;Speech.say(w.word,"en-US",{rate:.95,key:"en:"+p4(w.no)})}}else if(key!==lastKey){lastKey=key;Speech.stop()}
+fit($("#card"));
 }
 
-function result(){
+function result(){Speech.stop();document.documentElement.classList.remove("st");
   var c={ok:0,nr:0,ng:0};sess.res.forEach(function(r){c[r.j]++});
   var n=sess.res.length,rate=n?Math.round(c.ok/n*100):0;
   // 学習履歴に反映(保存は判定と独立)
   var t=daily[today()]||{n:0,ok:0};
-  var DAY=864e5,IV=[0,1,3,7,14,30];sess.res.forEach(function(r){var p=prog[r.no]||{},b=p.box||0;if(r.j==="ok")b=Math.min(5,b+1);else if(r.j==="ng")b=1;else b=Math.max(b,1);p.box=b;p.due=Date.now()+(r.j==="ok"?IV[b]:1)*DAY;p.hist=(p.hist||[]).concat(r.j).slice(-8);p.last=r.j;p.cnt=(p.cnt||0)+1;prog[r.no]=p});
-  sess.ids.forEach(function(no){if(sess.saved.indexOf(no)>=0){var p=prog[no]||{};p.saved=true;prog[no]=p}else if(prog[no])delete prog[no].saved});
-  t.n+=n;t.ok+=c.ok;daily[today()]=t;save("t19prog",prog);save("t19daily",daily);
+  var DAY=864e5,IV=[0,1,3,7,14,30];sess.res.forEach(function(r){var p=prog[r.no]||{},b=p.box||0;if(r.j==="ok")b=Math.min(5,b+1);else if(r.j==="ng")b=1;else b=Math.max(b,1);p.box=b;p.due=Date.now()+(r.j==="ok"?IV[b]:1)*DAY;p.hist=(p.hist||[]).concat(r.j).slice(-8);p.last=r.j;p.u=Date.now();p.cnt=(p.cnt||0)+1;prog[r.no]=p});
+  sess.ids.forEach(function(no){if(sess.saved.indexOf(no)>=0){var p=prog[no]||{};if(!p.saved){p.saved=true;p.u=Date.now()}prog[no]=p}else if(prog[no]&&prog[no].saved){delete prog[no].saved;prog[no].u=Date.now()}});
+  t.n+=n;t.ok+=c.ok;daily[today()]=t;save("t19prog",prog);save("t19daily",daily);save("t19dirty",true);setTimeout(function(){Sync.run()},0);
   var fin=sess;sess=null;save("t19sess",null);
   function lst(j){var a=fin.res.filter(function(r){return r.j===j});return a.length?'<ul class="list">'+a.map(function(r){var w=byNo(r.no);return'<li><b>'+esc(w.word)+'</b><span>'+esc(w.meaning)+'</span></li>'}).join("")+'</ul>':'<p class="note">なし</p>'}
   app.innerHTML='<h2>テスト結果</h2><div class="grid">'+st("出題数",n)+st("正解数",c.ok,"var(--ok)")+st("惜しい",c.nr,"var(--nr)")+st("間違い",c.ng,"var(--ng)")+st("正解率",rate+"%")+st("保存した単語",fin.saved.length,"var(--sv)")+'</div>'
@@ -211,8 +237,23 @@ try{localStorage.setItem("t19words",JSON.stringify(nw))}catch(e){showPv("保存�
 WORDS=nw;isSample=false;cfg.s=1;cfg.e=Math.min(100,WORDS[WORDS.length-1].no);save("t19cfg",cfg);var n=pv.ok.length;pv=null;showPv(n+"語を取り込みました(現在の収録は"+WORDS.length+"語)");list()}
 function check(){pv=analyze(parseCSV($("#ta").value));showPv()}
 app.innerHTML='<h2>CSV取り込み</h2><div class="card"><p class="note" style="margin:0 0 10px">列はA=英単語、B=日本語訳、C=追加情報(番号列なしの場合は上から1、2、3…番と数えます)。no,word,meaning,noteの番号つき形式も可。1行目のヘッダーはあってもなくてもOK。スプレッドシートからのコピー貼り付けもできます。UTF-8またはShift_JIS。データはこの端末のブラウザ内にのみ保存され、外部へは送信されません。</p><input type="file" id="fl" accept=".csv,.txt,text/csv"><textarea id="ta" rows="4" placeholder="または、ここにCSVを貼り付け&#10;no,word,meaning,note&#10;1,example,例,補足" style="'+fld+';margin-top:10px"></textarea><div class="row" style="margin-top:10px"><button id="chk">内容を確認</button></div><div id="pv"></div></div>'
++'<h2>音声クリップ(録音音声)</h2><div class="card"><p class="note" style="margin:0 0 10px">切り出した音声(target1900-audio.zip)を選ぶと、この端末のブラウザ内にだけ保存され、単語の発音が録音になります。音声が無い単語は機械音声で読み上げます。</p><input type="file" id="az" accept=".zip,.mp3,audio/mpeg" multiple><p class="note" style="margin:10px 0 4px">PCでは展開したフォルダ(en/・ja/を含む)を選んでもOK</p><input type="file" id="af" webkitdirectory multiple><div class="row" style="margin-top:10px"><button id="ad">音声を全て削除</button></div><p class="note" id="as" style="margin:10px 0 0"></p></div>'
 +'<h2>収録単語 <span id="cnt"></span></h2><input type="search" id="q" placeholder="番号・英単語・日本語で検索" style="'+fld+';margin-bottom:10px"><div class="card" id="wl"></div><div class="row" style="margin-top:18px"><button id="bk">ホームへ</button><button id="rs">サンプルデータに戻す</button></div>';
 $("#chk").onclick=check;
+function ast(){var e=0,j=0;Object.keys(HAVE).forEach(function(k){if(k[0]==="e")e++;else j++});$("#as").textContent="保存済み: 英語 "+e+" / 日本語 "+j+" 件"}
+async function imp(){var fs=Array.prototype.slice.call(this.files),ents=[],msg=$("#as");
+try{for(var i=0;i<fs.length;i++){var f=fs[i];if(/\.zip$/i.test(f.name)){(await readZip(await f.arrayBuffer())).forEach(function(z){ents.push({name:z.name,z:z})})}else ents.push({name:f.webkitRelativePath||f.name,f:f})}
+ents=ents.filter(function(x){return /(^|\/)(en|ja)\/\d{4}\.mp3$/.test(x.name)});
+if(!ents.length){msg.textContent="en/・ja/ フォルダの音声(mp3)が見つかりませんでした";return}
+for(var s=0;s<ents.length;s+=60){var part=ents.slice(s,s+60),bl=[];
+for(var j=0;j<part.length;j++){var x=part[j],m=x.name.match(/(en|ja)\/(\d{4})\.mp3$/),b;
+if(x.f)b=x.f;else if(x.z.meth===0)b=new Blob([x.z.data]);else b=await new Response(new Blob([x.z.data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).blob();
+bl.push({k:m[1]+":"+m[2],b:new Blob([b],{type:"audio/mpeg"})})}
+await IDB.tx("readwrite",function(s2){bl.forEach(function(y){s2.put(y.b,y.k)})});
+bl.forEach(function(y){HAVE[y.k]=1});msg.textContent="取り込み中… "+Math.min(s+60,ents.length)+" / "+ents.length}
+ast();msg.textContent+="(取り込み完了)"}catch(e){msg.textContent="取り込みに失敗しました(容量不足の可能性があります)"}}
+$("#az").onchange=imp;$("#af").onchange=imp;
+var arm2=false;$("#ad").onclick=function(){if(!arm2){arm2=true;this.textContent="もう一度押すと全て削除";return}arm2=false;this.textContent="音声を全て削除";IDB.tx("readwrite",function(s){return s.clear()}).then(function(){Object.keys(HAVE).forEach(function(k){delete HAVE[k]});ast()})};setTimeout(ast,400);
 $("#fl").onchange=function(){var f=this.files[0];if(!f)return;f.arrayBuffer().then(function(buf){var t;try{t=new TextDecoder("utf-8",{fatal:true}).decode(buf)}catch(e){t=new TextDecoder("shift_jis").decode(buf)}$("#ta").value=t;check()})};
 $("#q").oninput=function(){q=this.value.trim().toLowerCase();list()};
 $("#bk").onclick=home;
@@ -230,14 +271,98 @@ document.querySelectorAll("#dr button").forEach(function(b){b.onclick=function()
 document.querySelectorAll("[data-k]").forEach(function(b){b.onclick=function(){var k=K.filter(function(x){return x[0]===b.dataset.k})[0],l=ids(k);cfg.dir=dir;save("t19cfg",cfg);sess=newSess(k[0]==="new"?l:shuffle(l),dir);save("t19sess",sess);flipped=false;study()}});
 $("#bk").onclick=home}
 draw()}
+/* ===== 音声モジュール(単語・将来の文章/リスニングでも再利用できる汎用構造) ===== */
+var HAVE={},AU=new Audio();
+var IDB={db:null,open:function(){return new Promise(function(res,rej){if(IDB.db)return res(IDB.db);var r=indexedDB.open("t19audio",1);r.onupgradeneeded=function(){r.result.createObjectStore("a")};r.onsuccess=function(){IDB.db=r.result;res(r.result)};r.onerror=function(){rej(r.error)}})},
+tx:function(m,f){return IDB.open().then(function(db){return new Promise(function(res,rej){var t=db.transaction("a",m),q=f(t.objectStore("a"));t.oncomplete=function(){res(q&&q.result)};t.onerror=t.onabort=function(){rej(t.error)}})})},
+get:function(k){return IDB.tx("readonly",function(s){return s.get(k)})}};
+function p4(n){return("000"+n).slice(-4)}
+try{IDB.tx("readonly",function(s){return s.getAllKeys()}).then(function(k){(k||[]).forEach(function(x){HAVE[x]=1})}).catch(function(){})}catch(e){}
+function readZip(buf){var dv=new DataView(buf),u=new Uint8Array(buf),i=u.length-22;while(i>=0&&dv.getUint32(i,true)!==0x06054b50)i--;if(i<0)return[];var n=dv.getUint16(i+10,true),off=dv.getUint32(i+16,true),out=[];
+for(var k=0;k<n;k++){if(dv.getUint32(off,true)!==0x02014b50)break;var meth=dv.getUint16(off+10,true),csz=dv.getUint32(off+20,true),nl=dv.getUint16(off+28,true),el=dv.getUint16(off+30,true),cl=dv.getUint16(off+32,true),lo=dv.getUint32(off+42,true),name=new TextDecoder().decode(u.subarray(off+46,off+46+nl));off+=46+nl+el+cl;
+var ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true);out.push({name:name,meth:meth,data:u.subarray(ds,ds+csz)})}return out}
+var Speech=(function(){var ok="speechSynthesis" in window&&typeof SpeechSynthesisUtterance!=="undefined",V=[],tok=0,q=null;
+function lv(){try{V=speechSynthesis.getVoices()}catch(e){}}
+if(ok){lv();try{speechSynthesis.addEventListener("voiceschanged",lv)}catch(e){}}
+var PF={"en-US":/samantha|aria|jenny|ava|allison|google us english|zira|nicky|joelle|evan|alex/i,"ja-JP":/kyoko|o-ren|nanami|keita|google 日本語|haruka|ayumi/i};
+function voice(l){var a=V.filter(function(v){return v.lang.replace("_","-")===l});if(!a.length)a=V.filter(function(v){return v.lang.slice(0,2)===l.slice(0,2)});return a.filter(function(v){return PF[l].test(v.name)})[0]||a[0]||null}
+function say(text,lang,o){o=o||{};if(!text)return false;var t=++tok;try{if(ok)speechSynthesis.cancel()}catch(e){}try{AU.pause()}catch(e){}
+if(o.key&&HAVE[o.key]){IDB.get(o.key).then(function(b){if(t!==tok||!b)return;var url=URL.createObjectURL(b);AU.src=url;AU.playbackRate=o.rate||1;AU.onended=AU.onerror=function(){URL.revokeObjectURL(url);if(t===tok&&o.onend)o.onend()};AU.play().catch(function(){if(t===tok&&o.onend)o.onend()})}).catch(function(){if(t===tok&&o.onend)o.onend()});return true}
+if(!ok)return false;
+setTimeout(function(){if(t!==tok)return;try{var u=new SpeechSynthesisUtterance(text);u.lang=lang;var v=voice(lang);if(v)u.voice=v;u.rate=o.rate||1;u.onend=u.onerror=function(){if(t===tok&&o.onend)o.onend()};speechSynthesis.speak(u)}catch(e){if(o.onend)o.onend()}},50);return true}
+function stop(){tok++;q=null;try{AU.pause()}catch(e){}if(ok)try{speechSynthesis.cancel()}catch(e){}}
+function run(){var s=q;if(!s||s.paused)return;if(s.i>=s.items.length){q=null;if(s.o.onDone)s.o.onDone();return}
+var it=s.items[s.i];if(s.o.onItem)s.o.onItem(s.i);
+say(it.text,it.lang,{rate:s.o.rate,key:it.key,onend:function(){if(q!==s||s.paused)return;s.i++;setTimeout(function(){if(q===s)run()},it.gap||300)}})}
+function play(items,o){stop();q={items:items,i:0,o:o||{},paused:false};run()}
+function pause(){if(q){q.paused=true;tok++;try{AU.pause()}catch(e){}try{speechSynthesis.cancel()}catch(e){}}}
+function resume(){if(q&&q.paused){q.paused=false;run()}}
+function setRate(r){if(q)q.o.rate=r}
+addEventListener("pointerdown",function f(){try{if(ok){var u=new SpeechSynthesisUtterance(" ");u.volume=0;speechSynthesis.speak(u)}}catch(e){}try{AU.src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";AU.play().catch(function(){})}catch(e){}removeEventListener("pointerdown",f,true)},true);
+return{ok:true,say:say,stop:stop,play:play,pause:pause,resume:resume,setRate:setRate}})();
+var snd=load("t19snd",true),lastKey=null;
+var SPK='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z" fill="currentColor"/>',ICON_ON=SPK+'<path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>',ICON_OFF=SPK+'<path d="M16 9l5 6M21 9l-5 6"/></svg>';
+function fit(c){if(!c)return;c.style.removeProperty("--fs");for(var s=1;s>.55&&c.scrollHeight>c.clientHeight+1;s-=.05)c.style.setProperty("--fs",s.toFixed(2))}
+addEventListener("resize",function(){fit($("#card"))});
+function reader(){tab("rd");
+var rc=load("t19rd",null)||{s:cfg.s,e:cfg.e,rate:1,m:"both"},items=[],st="idle";
+function cnt(){return inRange(rc.s,rc.e).length}
+function build(){items=[];inRange(rc.s,rc.e).forEach(function(w,k){items.push({w:w,k:k,text:w.word,lang:"en-US",key:"en:"+p4(w.no),gap:rc.m==="both"?400:900});if(rc.m==="both")items.push({w:w,k:k,text:w.meaning,lang:"ja-JP",key:"ja:"+p4(w.no),gap:900})})}
+function lab(){$("#rb").textContent=st==="play"?"⏸ 一時停止":st==="pause"?"▶ 再開":"▶ 再生"}
+function upd(i){var it=items[i];if(!it)return;$("#cn").textContent="No."+it.w.no;$("#cw").textContent=it.w.word;$("#cm").textContent=rc.m==="both"?it.w.meaning:"";$("#cp").textContent=(it.k+1)+" / "+cnt()+" 語";$("#cb").style.width=((it.k+1)/cnt()*100)+"%"}
+function sg(id,arr,cur){return'<div class="seg" id="'+id+'">'+arr.map(function(a){return'<button data-v="'+a[0]+'" class="'+(String(a[0])===String(cur)?"on":"")+'">'+a[1]+'</button>'}).join("")+'</div>'}
+app.innerHTML='<h2>連続読み上げ</h2>'+(Speech.ok?'':'<p class="note">このブラウザは音声読み上げに対応していません</p>')
++'<div class="card"><div class="row"><input type="number" id="ra" min="1" max="1900" value="'+rc.s+'"> 〜 <input type="number" id="rz" min="1" max="1900" value="'+rc.e+'"> 番 <span class="note" id="rn">'+cnt()+'語</span></div><div class="row" style="margin-top:12px">'+sg("rm",[["both","英語→日本語"],["en","英語のみ"]],rc.m)+sg("rr",[[0.7,"0.7×"],[0.85,"0.85×"],[1,"1×"],[1.2,"1.2×"]],rc.rate)+'</div></div>'
++'<div class="card" style="margin-top:12px;text-align:center;padding:26px 18px"><div class="note" id="cn">—</div><div id="cw" style="font-size:38px;font-weight:700;margin:6px 0"></div><div id="cm" style="font-size:22px;color:var(--ac);min-height:30px"></div><div class="bar" style="margin-top:14px"><i id="cb" style="width:0;background:var(--ac)"></i></div><div class="note" id="cp" style="margin-top:6px"></div></div>'
++'<div class="row" style="margin-top:14px"><button class="p" id="rb"'+(Speech.ok?'':' disabled')+'>▶ 再生</button><button id="rx">■ 停止</button></div>';
+function halt(){Speech.stop();st="idle";lab()}
+function rng(){halt();rc.s=parseInt($("#ra").value)||1;rc.e=parseInt($("#rz").value)||1;save("t19rd",rc);$("#rn").textContent=cnt()+"語"}
+$("#ra").onchange=rng;$("#rz").onchange=rng;
+document.querySelectorAll("#rm button").forEach(function(b){b.onclick=function(){halt();rc.m=b.dataset.v;save("t19rd",rc);document.querySelectorAll("#rm button").forEach(function(x){x.classList.toggle("on",x===b)})}});
+document.querySelectorAll("#rr button").forEach(function(b){b.onclick=function(){rc.rate=+b.dataset.v;save("t19rd",rc);Speech.setRate(rc.rate);document.querySelectorAll("#rr button").forEach(function(x){x.classList.toggle("on",x===b)})}});
+$("#rb").onclick=function(){if(st==="idle"){if(!cnt())return;build();st="play";lab();Speech.play(items,{rate:rc.rate,onItem:upd,onDone:function(){st="idle";lab()}})}else if(st==="play"){Speech.pause();st="pause";lab()}else{Speech.resume();st="play";lab()}};
+$("#rx").onclick=halt;lab()}
+/* ===== 同期(Supabase REST)とバックアップ ===== */
+function merge(rem){Object.keys(rem.prog||{}).forEach(function(k){var r=rem.prog[k],l=prog[k];if(!l||(r.u||0)>(l.u||0))prog[k]=r});Object.keys(rem.daily||{}).forEach(function(d){var r=rem.daily[d],l=daily[d];if(!l||r.n>l.n)daily[d]=r})}
+var Sync=(function(){var cf=load("t19sb",null),au=load("t19auth",null),busy=false,msg="";
+function ok(){return cf&&cf.url&&cf.key}
+function H(t){return{"apikey":cf.key,"Authorization":"Bearer "+(t||cf.key),"Content-Type":"application/json"}}
+function ui(){var e=document.getElementById("sm");if(e)e.textContent=msg}
+async function call(path,body){if(!ok())throw new Error("接続先が未設定です");var r=await fetch(cf.url+"/auth/v1/"+path,{method:"POST",headers:H(),body:JSON.stringify(body)});var j=await r.json();if(!r.ok)throw new Error(j.error_description||j.msg||j.message||"エラー");return j}
+function setAuth(j){if(j&&j.access_token){au={a:j.access_token,r:j.refresh_token,x:Date.now()+(j.expires_in||3600)*1000-60000,uid:(j.user&&j.user.id)||(au&&au.uid),em:(j.user&&j.user.email)||(au&&au.em)};save("t19auth",au);return true}return false}
+async function token(){if(Date.now()>au.x)setAuth(await call("token?grant_type=refresh_token",{refresh_token:au.r}));return au.a}
+async function run(){if(busy||!ok()||!au||!navigator.onLine)return;busy=true;msg="同期中…";ui();
+try{var t=await token(),r=await fetch(cf.url+"/rest/v1/user_data?select=data&user_id=eq."+au.uid,{headers:H(t)});if(!r.ok)throw new Error("取得に失敗("+r.status+")");var rows=await r.json();
+if(rows.length&&rows[0].data)merge(rows[0].data);
+var w=await fetch(cf.url+"/rest/v1/user_data?on_conflict=user_id",{method:"POST",headers:Object.assign(H(t),{Prefer:"resolution=merge-duplicates"}),body:JSON.stringify({user_id:au.uid,data:{prog:prog,daily:daily},updated_at:new Date().toISOString()})});if(!w.ok)throw new Error("送信に失敗("+w.status+")");
+save("t19prog",prog);save("t19daily",daily);save("t19dirty",false);msg="同期しました("+new Date().toLocaleTimeString()+")"}catch(e){msg="同期できませんでした: "+e.message+"(オンライン復帰後に自動で再試行します)"}
+busy=false;ui()}
+addEventListener("online",function(){run()});document.addEventListener("visibilitychange",function(){if(!document.hidden)run()});setTimeout(run,1500);
+return{run:run,get:function(){return{cf:cf,au:au,msg:msg}},setCfg:function(c){cf=c;save("t19sb",c)},
+login:async function(e,p){setAuth(await call("token?grant_type=password",{email:e,password:p}))},
+signup:async function(e,p){var j=await call("signup",{email:e,password:p});if(!setAuth(j))return"confirm"},
+logout:function(){au=null;save("t19auth",null)}}})();
+function syncUI(){tab("sync");var s=Sync.get(),cf=s.cf||{url:"",key:""},au=s.au;
+var fl="width:100%;font:inherit;padding:10px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);margin-top:8px";
+app.innerHTML='<h2>クラウド同期(Supabase・無料枠)</h2><div class="card"><p class="note" style="margin:0">同期するのは学習記録(判定・復習日・保存)だけです。単語データと音声は端末内に残ります。この機能は、ご自身のサーバーで公開したPWA版で動作します。</p>'
++'<input id="su" placeholder="Project URL (https://xxxx.supabase.co)" value="'+esc(cf.url||"")+'" style="'+fl+'"><input id="sk" placeholder="anon public key" value="'+esc(cf.key||"")+'" style="'+fl+'"><div class="row" style="margin-top:10px"><button id="ss">接続先を保存</button></div></div>'
++'<h2>アカウント</h2><div class="card">'+(au?'<p style="margin:0"><b>'+esc(au.em||"")+'</b> でログイン中</p><div class="row" style="margin-top:10px"><button class="p" id="sn">今すぐ同期</button><button id="lo">ログアウト</button></div>':'<input id="em" type="email" placeholder="メールアドレス" style="'+fl+'"><input id="pw" type="password" placeholder="パスワード(6文字以上)" style="'+fl+'"><div class="row" style="margin-top:10px"><button class="p" id="li">ログイン</button><button id="su2">新規登録</button></div>')+'<p class="note" id="sm" style="margin:10px 0 0">'+esc(s.msg||"")+'</p></div>'
++'<h2>バックアップと復元</h2><div class="card"><div class="row"><button id="be">書き出す</button><input type="file" id="bf" accept=".json,application/json"></div><textarea id="bt" rows="3" placeholder="書き出した内容がここに表示されます。復元するときは、ここに貼り付けるか、ファイルを選びます。" style="'+fl+'"></textarea><div class="row" style="margin-top:10px"><button id="br">この内容で復元</button></div><p class="note" id="bm" style="margin:10px 0 0"></p></div>';
+$("#ss").onclick=function(){var u=$("#su").value.trim().replace(/\/+$/,""),k=$("#sk").value.trim();Sync.setCfg(u&&k?{url:u,key:k}:null);$("#sm").textContent=u&&k?"接続先を保存しました":"接続先を削除しました"};
+function act(f){return async function(){var m=$("#sm");m.textContent="処理中…";try{var r=await f();if(r==="confirm"){m.textContent="確認メールを送りました。メール内のリンクを開いてからログインしてください";return}syncUI();Sync.run()}catch(e){m.textContent="失敗しました: "+e.message}}}
+if($("#li")){$("#li").onclick=act(function(){return Sync.login($("#em").value.trim(),$("#pw").value)});$("#su2").onclick=act(function(){return Sync.signup($("#em").value.trim(),$("#pw").value)})}
+if($("#sn")){$("#sn").onclick=function(){Sync.run()};$("#lo").onclick=function(){Sync.logout();syncUI()}}
+$("#be").onclick=function(){var d={v:1,t:Date.now(),prog:prog,daily:daily};if(!isSample)d.words=WORDS;var j=JSON.stringify(d);$("#bt").value=j;try{var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([j],{type:"application/json"}));a.download="target1900-backup.json";a.click()}catch(e){}$("#bm").textContent="書き出しました(ダウンロードされない場合は、下の欄の内容をコピーして保存してください)"};
+function rest(t){try{var d=JSON.parse(t);if(!d||!d.prog)throw 1;merge(d);if(d.words&&d.words.length){WORDS=d.words;isSample=false;try{localStorage.setItem("t19words",JSON.stringify(WORDS))}catch(e){}}save("t19prog",prog);save("t19daily",daily);save("t19dirty",true);$("#bm").textContent="復元しました(学習記録は新しい方を採用して統合)";Sync.run()}catch(e){$("#bm").textContent="読み込めませんでした。書き出したJSONか確認してください"}}
+$("#br").onclick=function(){rest($("#bt").value)};$("#bf").onchange=function(){var f=this.files[0];if(f)f.text().then(rest)}}
 document.addEventListener("keydown",function(e){if(!$("#card"))return;
   if(e.key===" "||e.key==="Enter"){e.preventDefault();act.flip();return}
   if(e.key==="ArrowDown"){e.preventDefault();$("#sv").click();return}
   var j={ArrowLeft:"ng",ArrowUp:"nr",ArrowRight:"ok"}[e.key];
   if(j){e.preventDefault();var b=document.querySelector('.judge [data-j="'+j+'"]');if(b)b.click()}});
-function tab(n){document.querySelectorAll("#nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===n)})}
-document.querySelectorAll("#nav button").forEach(function(b){b.onclick=function(){({home:home,test:setup,rv:review,wd:words})[b.dataset.t]()}});
-$("#logo").onclick=home;
+function tab(n,k){if(!k){Speech.stop();lastKey=null}document.documentElement.classList.remove("st");document.querySelectorAll("#nav button").forEach(function(b){b.classList.toggle("on",b.dataset.t===n)})}
+document.querySelectorAll("#nav button").forEach(function(b){b.onclick=function(){({home:home,test:setup,rv:review,wd:words,rd:reader})[b.dataset.t]()}});
+$("#logo").onclick=home;$("#cloud").onclick=syncUI;
 $("#theme").onclick=function(){var r=document.documentElement,cur=r.dataset.theme||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");r.dataset.theme=cur==="dark"?"light":"dark";save("t19theme",r.dataset.theme)};
 var th=load("t19theme",null);if(th)document.documentElement.dataset.theme=th;
 home();
